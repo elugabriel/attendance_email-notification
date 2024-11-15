@@ -149,6 +149,57 @@ def download_attendance(course_id):
     
     return response
 
+@app.route('/view_attendance/<int:course_id>')
+def view_attendance(course_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+
+    # Fetch course details
+    course = db.execute('SELECT * FROM courses WHERE course_id = ?', (course_id,)).fetchone()
+    if not course:
+        flash("Course not found!")
+        return redirect(url_for('lecturer_dashboard'))
+
+    # Fetch attendance details for the course
+    attendance_records = db.execute('''
+        SELECT s.matric_number, s.first_name, s.last_name,
+               COUNT(CASE WHEN a.status = "Present" THEN 1 END) AS total_present
+        FROM attendance a
+        JOIN students s ON a.student_id = s.id
+        WHERE a.course_id = ?
+        GROUP BY s.id
+    ''', (course_id,)).fetchall()
+
+    # Calculate attendance percentage
+    total_classes = 10  # Replace with the actual number of classes
+    attendance_data = []
+    for record in attendance_records:
+        total_present = record['total_present']
+        percentage = (total_present / total_classes) * 100
+        attendance_data.append({
+            'matric_number': record['matric_number'],
+            'first_name': record['first_name'],
+            'last_name': record['last_name'],
+            'total_present': total_present,
+            'attendance_percentage': round(percentage, 2),
+        })
+
+    return render_template('view_attendance.html', course=course, attendance=attendance_data)
+
+
+
+@app.route('/send_low_attendance_emails/<int:course_id>')
+def send_low_attendance_emails(course_id):
+    attendance_data = get_attendance_data(course_id)  # Replace with your actual query
+    low_attendance = [s for s in attendance_data if s['attendance_percentage'] < 60]
+    for student in low_attendance:
+        send_email(student['email'], "Attendance Alert", f"Your attendance is {student['attendance_percentage']}%.")
+    flash("Emails sent to students with attendance below 60%.")
+    return redirect(url_for('view_attendance', course_id=course_id))
+
+
 # Run the app
 if __name__ == '__main__':
     app.run(debug=True)

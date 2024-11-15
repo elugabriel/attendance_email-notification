@@ -102,7 +102,7 @@
         {% for course in courses %}
         <li>
             <span>{{ course.course_name }}</span>
-            <a href="{{ url_for('download_attendance', course_id=course.course_id) }}">Download Attendance</a>
+            <a href="{{ url_for('view_attendance', course_id=course['course_id']) }}">View Attendance</a>
         </li>
         {% endfor %}
     </ul>
