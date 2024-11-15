@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .footer a {
+            text-decoration: none;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            color: #45a049;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Welcome to the Attendance Management System</h1>
+</header>
+
+<div class="container">
+    <h2>Mark Your Attendance</h2>
+    <form action="/mark_attendance" method="POST">
+        <label for="matric_number">Matric Number:</label>
+        <input type="text" id="matric_number" name="matric_number" required><br>
+
+        <label for="course">Select Course:</label>
+        <select id="course" name="course" required>
+            <option value="" disabled selected>-- Select a Course --</option>
+            <option value="Introduction to Computer Science">Introduction to Computer Science</option>
+            <option value="Programming Fundamentals">Programming Fundamentals</option>
+            <option value="Data Structures and Algorithms">Data Structures and Algorithms</option>
+            <option value="Database Systems">Database Systems</option>
+            <option value="Computer Networks">Computer Networks</option>
+            <option value="Software Engineering">Software Engineering</option>
+            <option value="Artificial Intelligence">Artificial Intelligence</option>
+            <option value="Cybersecurity">Cybersecurity</option>
+            <option value="Machine Learning">Machine Learning</option>
+            <option value="Cloud Computing">Cloud Computing</option>
+            <option value="Web Development">Web Development</option>
+            <option value="Mobile App Development">Mobile App Development</option>
+            <option value="Data Science">Data Science</option>
+            <option value="Internet of Things (IoT)">Internet of Things (IoT)</option>
+            <option value="Human-Computer Interaction (HCI)">Human-Computer Interaction (HCI)</option>
+        </select><br>
+
+        <!-- Hidden input for status set to 'Present' -->
+        <input type="hidden" name="status" value="Present">
+
+        <button type="submit">Mark Attendance</button>
+    </form>
+</div>
+
+<div class="footer">
+    <p>Lecturers and HOD  <a href="/login">Login here</a></p>
+</div>
+
+</body>
+</html>
