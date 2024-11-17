@@ -3,6 +3,10 @@ import sqlite3
 from datetime import datetime
 import csv
 
+import smtplib
+import ssl
+from email.message import EmailMessage
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
@@ -190,14 +194,84 @@ def view_attendance(course_id):
 
 
 
-@app.route('/send_low_attendance_emails/<int:course_id>')
+@app.route('/send_low_attendance_emails/<int:course_id>', methods=['GET'])
 def send_low_attendance_emails(course_id):
-    attendance_data = get_attendance_data(course_id)  # Replace with your actual query
-    low_attendance = [s for s in attendance_data if s['attendance_percentage'] < 60]
-    for student in low_attendance:
-        send_email(student['email'], "Attendance Alert", f"Your attendance is {student['attendance_percentage']}%.")
-    flash("Emails sent to students with attendance below 60%.")
+    db = get_db()
+    query = """
+    SELECT s.first_name, s.last_name, s.email AS student_email, s.parent_email,
+           COUNT(CASE WHEN a.status = 'Present' THEN 1 END) AS total_present,
+           (COUNT(CASE WHEN a.status = 'Present' THEN 1 END) / 10.0) * 100 AS attendance_percentage
+    FROM attendance a
+    JOIN students s ON a.student_id = s.id
+    WHERE a.course_id = ?
+    GROUP BY s.id
+    HAVING attendance_percentage < 60
+    """
+    low_attendance_records = db.execute(query, (course_id,)).fetchall()
+
+    for record in low_attendance_records:
+        send_email_to_student_and_parent(record)
+
+    flash('Emails sent to students and their parents for attendance below 60%.')
     return redirect(url_for('view_attendance', course_id=course_id))
+
+
+
+def get_attendance_data(course_id):
+    conn = get_db()  # Use the get_db function to establish a connection
+    cursor = conn.cursor()  # Create a cursor object
+    query = """
+    SELECT s.matric_number, s.first_name, s.last_name, COUNT(CASE WHEN a.status = 'Present' THEN 1 END) AS total_present, 
+           (COUNT(CASE WHEN a.status = 'Present' THEN 1 END) / 10.0) * 100 AS attendance_percentage
+    FROM attendance a
+    JOIN students s ON a.student_id = s.id
+    WHERE a.course_id = ?
+    GROUP BY s.id
+    """
+    cursor.execute(query, (course_id,))
+    attendance_data = cursor.fetchall()
+    conn.close()  # Close the connection
+    return attendance_data
+
+def send_email_to_student_and_parent(record):
+    email_sender = 'noreplyattendance2024@gmail.com'
+    email_password = 'hshw vqdu jnii mtnw'
+
+    student_email = record['student_email']
+    parent_email = record['parent_email']
+    subject = 'Low Attendance Alert'
+    body = f"""
+    Dear {record['first_name']} {record['last_name']},
+
+    Your current attendance for the course is {record['attendance_percentage']}%. 
+    Please ensure to attend more classes to meet the minimum requirement of 70%.
+
+    Best regards,
+    Attendance System
+    """
+
+    emails_to_send = [student_email, parent_email]
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+        smtp.login(email_sender, email_password)
+        for recipient in emails_to_send:
+            em = EmailMessage()
+            em['From'] = email_sender
+            em['To'] = recipient
+            em['Subject'] = subject
+            em.set_content(body)
+            try:
+                smtp.sendmail(email_sender, recipient, em.as_string())
+                print(f"Email sent to {recipient}")
+            except Exception as e:
+                print(f"Failed to send email to {recipient}: {e}")
+
+
+    # subject = "Low Attendance Alert"
+    # message = f"Dear {record['first_name']} {record['last_name']},\n\nYou have low attendance in your course. Your current attendance is {record['attendance_percentage']}%. Please attend more classes to improve your attendance.\n\nRegards,\nAttendance System"
+
+    
 
 
 # Run the app
