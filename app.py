@@ -209,11 +209,15 @@ def send_low_attendance_emails(course_id):
     """
     low_attendance_records = db.execute(query, (course_id,)).fetchall()
 
-    for record in low_attendance_records:
-        send_email_to_student_and_parent(record)
+    if not low_attendance_records:
+        flash("No students with attendance below 60%.", "info")
+    else:
+        for record in low_attendance_records:
+            send_email_to_student_and_parent(record)
+        flash("Emails sent successfully to students and their parents.", "success")
 
-    flash('Emails sent to students and their parents for attendance below 60%.')
     return redirect(url_for('view_attendance', course_id=course_id))
+
 
 
 
